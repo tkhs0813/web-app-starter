@@ -1,0 +1,73 @@
+# web-app-starter
+
+Ryo's SvelteKit web app starter for OSS-friendly products and small SaaS experiments.
+
+## Stack
+
+- SvelteKit + Svelte 5 + TypeScript
+- Turso/libSQL + Drizzle ORM
+- Better Auth: email/password + GitHub OAuth
+- Tailwind CSS v4 + forms + typography
+- Vitest, Playwright, Storybook
+- ESLint, Prettier, GitHub Actions
+
+## Quick start
+
+```bash
+pnpm install
+cp .env.example .env
+pnpm auth:schema
+pnpm db:push
+pnpm dev
+```
+
+Use `DATABASE_URL="file:local.db"` for local development, or point it at a Turso database:
+
+```bash
+turso db create web-app-starter
+turso db show web-app-starter --url
+turso db tokens create web-app-starter
+```
+
+## Scripts
+
+```bash
+pnpm dev          # start dev server
+pnpm check        # Svelte + TypeScript checks
+pnpm lint         # Prettier check + ESLint
+pnpm test:unit    # Vitest
+pnpm test:e2e     # Playwright
+pnpm build        # production build
+pnpm validate     # check + lint + unit tests + build
+pnpm db:push      # push Drizzle schema
+pnpm db:studio    # inspect DB
+pnpm auth:schema  # regenerate Better Auth Drizzle schema
+```
+
+## App routes
+
+- `/` landing page
+- `/login` email/password + GitHub OAuth
+- `/dashboard` protected app shell
+- `/dashboard/projects` project placeholder
+- `/dashboard/settings` account settings placeholder
+- `/dashboard/billing` billing placeholder
+- `/pricing` pricing placeholder
+- `/docs` product docs placeholder
+
+## Template philosophy
+
+Keep the core strong but replaceable:
+
+1. Auth, DB, dashboard, billing routes are present from day one.
+2. Product-specific logic should live under `src/lib/server` and `src/lib`.
+3. Server secrets stay in `$lib/server` or server routes.
+4. Every new feature should add focused tests before it grows.
+
+## Before publishing as OSS
+
+- Replace placeholder copy and branding.
+- Choose and document a license.
+- Add real screenshots.
+- Run `pnpm validate`.
+- Create a fresh Turso DB for any public demo.
