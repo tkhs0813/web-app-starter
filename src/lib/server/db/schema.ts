@@ -58,9 +58,12 @@ export const task = sqliteTable('task', {
 	id: text('id')
 		.primaryKey()
 		.$defaultFn(() => crypto.randomUUID()),
-	projectId: text('project_id').references(() => project.id, { onDelete: 'cascade' }),
+	projectId: text('project_id')
+		.notNull()
+		.references(() => project.id, { onDelete: 'cascade' }),
 	title: text('title').notNull(),
 	priority: integer('priority').notNull().default(1),
+	completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 	...timestamps
 });
 

@@ -47,13 +47,22 @@ pnpm auth:schema  # regenerate Better Auth Drizzle schema
 ## App routes
 
 - `/` landing page
-- `/login` email/password + GitHub OAuth
-- `/dashboard` protected app shell
-- `/dashboard/projects` project placeholder
-- `/dashboard/settings` account settings placeholder
-- `/dashboard/billing` billing placeholder
-- `/pricing` pricing placeholder
-- `/docs` product docs placeholder
+- `/login` email/password sign-in/sign-up + GitHub OAuth entry point
+- `/dashboard` protected app shell with workspace stats
+- `/dashboard/projects` project and task CRUD
+- `/dashboard/settings` profile update form
+- `/dashboard/billing` typed billing plan catalog and Stripe lookup-key placeholders
+- `/pricing` public pricing placeholder
+- `/docs` product docs and deployment-provider checklist
+
+## Core app features
+
+- First dashboard visit creates a personal workspace for the signed-in user.
+- Projects support create, edit, status update, and delete.
+- Tasks can be added to projects, toggled complete, and deleted.
+- Settings can update the signed-in user's display name.
+- Billing exposes a typed plan catalog (`free`, `pro`, `team`) for future checkout wiring.
+- Docs include deployment checklists for Vercel, Cloudflare Pages, and Fly.io.
 
 ## Template philosophy
 
