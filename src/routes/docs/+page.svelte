@@ -15,14 +15,18 @@
 			<li>Email/password auth</li>
 			<li>Personal workspace creation on first dashboard access</li>
 			<li>Project and task CRUD under the authenticated dashboard</li>
-			<li>Billing plan catalog ready for Stripe lookup keys</li>
+			<li>Stripe Checkout, Customer Portal, webhook sync, and plan limits</li>
 		</ul>
 		<h2>Environment variables</h2>
 		<pre><code
 				>ORIGIN
 DATABASE_URL
 DATABASE_AUTH_TOKEN
-BETTER_AUTH_SECRET</code
+BETTER_AUTH_SECRET
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+STRIPE_PRO_PRICE_LOOKUP_KEY
+STRIPE_TEAM_PRICE_LOOKUP_KEY</code
 			></pre>
 	</div>
 

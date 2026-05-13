@@ -51,7 +51,7 @@ pnpm auth:schema  # regenerate Better Auth Drizzle schema
 - `/dashboard` protected app shell with workspace stats
 - `/dashboard/projects` project and task CRUD
 - `/dashboard/settings` profile update form
-- `/dashboard/billing` typed billing plan catalog and Stripe lookup-key placeholders
+- `/dashboard/billing` Stripe Checkout, Customer Portal, webhook-backed subscription state, and plan catalog
 - `/pricing` public pricing placeholder
 - `/docs` product docs and deployment-provider checklist
 
@@ -61,8 +61,32 @@ pnpm auth:schema  # regenerate Better Auth Drizzle schema
 - Projects support create, edit, status update, and delete.
 - Tasks can be added to projects, toggled complete, and deleted.
 - Settings can update the signed-in user's display name.
-- Billing exposes a typed plan catalog (`free`, `pro`, `team`) for future checkout wiring.
+- Billing includes Stripe Checkout, Customer Portal, webhook sync, `free`/`pro`/`team` plans, and plan limits.
 - Docs include deployment checklists for Vercel, Cloudflare Pages, and Fly.io.
+
+## Stripe billing setup
+
+Create recurring Stripe Prices with these lookup keys, or change the env vars to match your own keys:
+
+```bash
+STRIPE_PRO_PRICE_LOOKUP_KEY="starter_pro_monthly"
+STRIPE_TEAM_PRICE_LOOKUP_KEY="starter_team_monthly"
+```
+
+Required Stripe env vars:
+
+```bash
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+```
+
+Local webhook forwarding example:
+
+```bash
+stripe listen --forward-to localhost:5173/stripe/webhook
+```
+
+The app treats webhooks as the source of truth. Checkout success pages do not directly grant paid access; subscription state is synced from Stripe events into the local database.
 
 ## Template philosophy
 

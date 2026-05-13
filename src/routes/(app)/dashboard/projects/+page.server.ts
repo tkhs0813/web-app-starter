@@ -1,4 +1,6 @@
 import { fail } from '@sveltejs/kit';
+import { canCreateProject, projectLimitMessage } from '$lib/server/app/billing';
+import { getWorkspaceBilling } from '$lib/server/app/billing.server';
 import {
 	createProject,
 	createTask,
@@ -15,12 +17,18 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ parent }) => {
 	const { workspace } = await parent();
-	const [projects, tasks] = await Promise.all([
+	const [projects, tasks, billing] = await Promise.all([
 		listWorkspaceProjects(workspace.id),
-		listWorkspaceTasks(workspace.id)
+		listWorkspaceTasks(workspace.id),
+		getWorkspaceBilling(workspace.id)
 	]);
 
-	return { projects, tasks };
+	return {
+		projects,
+		tasks,
+		billing,
+		projectLimit: projectLimitMessage(billing.effectivePlanId)
+	};
 };
 
 export const actions: Actions = {
@@ -30,6 +38,16 @@ export const actions: Actions = {
 		const form = await request.formData();
 
 		try {
+			const existingProjects = await listWorkspaceProjects(workspace.id);
+			const billing = await getWorkspaceBilling(workspace.id);
+			if (
+				!canCreateProject({ plan: billing.effectivePlanId, projectCount: existingProjects.length })
+			) {
+				return fail(403, {
+					message: projectLimitMessage(billing.effectivePlanId) ?? 'Plan limit reached'
+				});
+			}
+
 			await createProject({
 				workspaceId: workspace.id,
 				name: form.get('name')?.toString() ?? '',

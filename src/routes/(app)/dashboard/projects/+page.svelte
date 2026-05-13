@@ -24,6 +24,12 @@
 		</p>
 	{/if}
 
+	{#if data.projectLimit}
+		<p class="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-sm text-slate-300">
+			Current plan: <strong class="text-white">{data.billing.plan.name}</strong> · {data.projectLimit}
+		</p>
+	{/if}
+
 	<form
 		method="post"
 		action="?/createProject"

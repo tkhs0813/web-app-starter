@@ -14,7 +14,14 @@ export const deploymentProviders: DeploymentProvider[] = [
 		bestFor: 'Fast SvelteKit previews and SaaS-style apps with GitHub PR deployments.',
 		adapter: '@sveltejs/adapter-vercel',
 		commands: ['pnpm add -D @sveltejs/adapter-vercel', 'vercel link', 'vercel deploy'],
-		env: ['ORIGIN', 'DATABASE_URL', 'DATABASE_AUTH_TOKEN', 'BETTER_AUTH_SECRET']
+		env: [
+			'ORIGIN',
+			'DATABASE_URL',
+			'DATABASE_AUTH_TOKEN',
+			'BETTER_AUTH_SECRET',
+			'STRIPE_SECRET_KEY',
+			'STRIPE_WEBHOOK_SECRET'
+		]
 	},
 	{
 		id: 'cloudflare-pages',
@@ -22,7 +29,14 @@ export const deploymentProviders: DeploymentProvider[] = [
 		bestFor: 'Edge hosting, generous free tier, and OSS-friendly static/serverless deployments.',
 		adapter: '@sveltejs/adapter-cloudflare',
 		commands: ['pnpm add -D @sveltejs/adapter-cloudflare', 'pnpm build', 'wrangler pages deploy'],
-		env: ['ORIGIN', 'DATABASE_URL', 'DATABASE_AUTH_TOKEN', 'BETTER_AUTH_SECRET']
+		env: [
+			'ORIGIN',
+			'DATABASE_URL',
+			'DATABASE_AUTH_TOKEN',
+			'BETTER_AUTH_SECRET',
+			'STRIPE_SECRET_KEY',
+			'STRIPE_WEBHOOK_SECRET'
+		]
 	},
 	{
 		id: 'fly-io',
@@ -30,6 +44,13 @@ export const deploymentProviders: DeploymentProvider[] = [
 		bestFor: 'Long-running Node servers, regional apps, and Docker-based deployments.',
 		adapter: '@sveltejs/adapter-node',
 		commands: ['pnpm add -D @sveltejs/adapter-node', 'fly launch', 'fly deploy'],
-		env: ['ORIGIN', 'DATABASE_URL', 'DATABASE_AUTH_TOKEN', 'BETTER_AUTH_SECRET']
+		env: [
+			'ORIGIN',
+			'DATABASE_URL',
+			'DATABASE_AUTH_TOKEN',
+			'BETTER_AUTH_SECRET',
+			'STRIPE_SECRET_KEY',
+			'STRIPE_WEBHOOK_SECRET'
+		]
 	}
 ];
