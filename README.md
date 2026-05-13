@@ -6,7 +6,7 @@ Ryo's SvelteKit web app starter for OSS-friendly products and small SaaS experim
 
 - SvelteKit + Svelte 5 + TypeScript
 - Turso/libSQL + Drizzle ORM
-- Better Auth: email/password + GitHub OAuth
+- Better Auth: email/password
 - Tailwind CSS v4 + forms + typography
 - Vitest, Playwright, Storybook
 - ESLint, Prettier, GitHub Actions
@@ -47,7 +47,7 @@ pnpm auth:schema  # regenerate Better Auth Drizzle schema
 ## App routes
 
 - `/` landing page
-- `/login` email/password sign-in/sign-up + GitHub OAuth entry point
+- `/login` email/password sign-in/sign-up
 - `/dashboard` protected app shell with workspace stats
 - `/dashboard/projects` project and task CRUD
 - `/dashboard/settings` profile update form

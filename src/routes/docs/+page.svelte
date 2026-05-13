@@ -12,7 +12,7 @@
 		<p>このページをプロダクトのドキュメント、オンボーディング、README 連動コンテンツに育てる。</p>
 		<h2>Included flows</h2>
 		<ul>
-			<li>Email/password auth and GitHub OAuth configuration slots</li>
+			<li>Email/password auth</li>
 			<li>Personal workspace creation on first dashboard access</li>
 			<li>Project and task CRUD under the authenticated dashboard</li>
 			<li>Billing plan catalog ready for Stripe lookup keys</li>
@@ -22,9 +22,7 @@
 				>ORIGIN
 DATABASE_URL
 DATABASE_AUTH_TOKEN
-BETTER_AUTH_SECRET
-GITHUB_CLIENT_ID
-GITHUB_CLIENT_SECRET</code
+BETTER_AUTH_SECRET</code
 			></pre>
 	</div>
 

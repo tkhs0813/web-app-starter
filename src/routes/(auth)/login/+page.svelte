@@ -16,8 +16,7 @@
 			Sign in and start building.
 		</h1>
 		<p class="mt-5 text-lg leading-8 text-slate-300">
-			Email/password と GitHub OAuth の入口を用意済み。あとで Google, magic link, team auth
-			も足しやすい構成。
+			Email/password 認証を用意済み。あとで OAuth, magic link, team auth も足しやすい構成。
 		</p>
 	</section>
 
@@ -76,21 +75,6 @@
 					>Create account</button
 				>
 			</div>
-		</form>
-
-		<div class="my-6 flex items-center gap-3 text-xs tracking-[0.3em] text-slate-500 uppercase">
-			<div class="h-px flex-1 bg-white/10"></div>
-			or
-			<div class="h-px flex-1 bg-white/10"></div>
-		</div>
-
-		<form method="post" action="?/signInSocial" use:enhance>
-			<input type="hidden" name="provider" value="github" />
-			<input type="hidden" name="callbackURL" value="/dashboard" />
-			<button
-				class="w-full rounded-2xl bg-white px-4 py-3 font-semibold text-slate-950 hover:bg-slate-200"
-				>Continue with GitHub</button
-			>
 		</form>
 	</section>
 </main>

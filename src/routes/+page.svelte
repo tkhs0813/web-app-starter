@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	const features = [
 		'Turso/libSQL + Drizzle schema',
-		'Better Auth email/password + GitHub OAuth',
+		'Better Auth email/password',
 		'Protected dashboard, settings, billing placeholders',
 		'Vitest, Playwright, Storybook, ESLint, Prettier',
 		'Tailwind CSS v4 with forms and typography plugins',

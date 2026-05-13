@@ -39,16 +39,5 @@ export const actions: Actions = {
 		}
 
 		redirect(302, '/dashboard');
-	},
-	signInSocial: async (event) => {
-		const formData = await event.request.formData();
-		const provider = formData.get('provider')?.toString() ?? 'github';
-		const callbackURL = formData.get('callbackURL')?.toString() ?? '/dashboard';
-		const result = await auth.api.signInSocial({
-			body: { provider: provider as 'github', callbackURL }
-		});
-
-		if (result.url) redirect(302, result.url);
-		return fail(400, { message: 'Social sign-in failed' });
 	}
 };
