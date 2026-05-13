@@ -16,6 +16,7 @@ export const workspace = sqliteTable('workspace', {
 	name: text('name').notNull(),
 	slug: text('slug').notNull().unique(),
 	ownerId: text('owner_id').notNull(),
+	onboardingCompletedAt: integer('onboarding_completed_at', { mode: 'timestamp' }),
 	...timestamps
 });
 
@@ -36,6 +37,30 @@ export const workspaceMember = sqliteTable(
 	},
 	(table) => [
 		uniqueIndex('workspace_member_workspace_user_idx').on(table.workspaceId, table.userId)
+	]
+);
+
+export const workspaceInvite = sqliteTable(
+	'workspace_invite',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		workspaceId: text('workspace_id')
+			.notNull()
+			.references(() => workspace.id, { onDelete: 'cascade' }),
+		email: text('email').notNull(),
+		role: text('role', { enum: ['admin', 'member'] })
+			.notNull()
+			.default('member'),
+		tokenHash: text('token_hash').notNull().unique(),
+		invitedByUserId: text('invited_by_user_id').notNull(),
+		acceptedAt: integer('accepted_at', { mode: 'timestamp' }),
+		expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+		...timestamps
+	},
+	(table) => [
+		uniqueIndex('workspace_invite_workspace_email_idx').on(table.workspaceId, table.email)
 	]
 );
 

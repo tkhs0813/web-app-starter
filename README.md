@@ -1,12 +1,15 @@
 # web-app-starter
 
-Ryo's SvelteKit web app starter for OSS-friendly products and small SaaS experiments.
+Ryo's Cloudflare-first SvelteKit starter for OSS-friendly products and small SaaS experiments.
 
 ## Stack
 
 - SvelteKit + Svelte 5 + TypeScript
+- Cloudflare Pages/Workers via `@sveltejs/adapter-cloudflare`
 - Turso/libSQL + Drizzle ORM
-- Better Auth: email/password
+- Better Auth: email/password, email verification, password reset, sessions
+- Workspace onboarding, team invites, role helpers
+- Stripe Checkout, Customer Portal, webhook-backed subscription state
 - Tailwind CSS v4 + forms + typography
 - Vitest, Playwright, Storybook
 - ESLint, Prettier, GitHub Actions
@@ -17,7 +20,7 @@ Ryo's SvelteKit web app starter for OSS-friendly products and small SaaS experim
 pnpm install
 cp .env.example .env
 pnpm auth:schema
-pnpm db:push
+pnpm db:push:local
 pnpm dev
 ```
 
@@ -32,37 +35,93 @@ turso db tokens create web-app-starter
 ## Scripts
 
 ```bash
-pnpm dev          # start dev server
+pnpm dev          # start Vite dev server
 pnpm check        # Svelte + TypeScript checks
 pnpm lint         # Prettier check + ESLint
-pnpm test:unit    # Vitest
+pnpm test:unit    # Vitest server/unit tests
 pnpm test:e2e     # Playwright
-pnpm build        # production build
+pnpm build        # production Cloudflare build
 pnpm validate     # check + lint + unit tests + build
-pnpm db:push      # push Drizzle schema
-pnpm db:studio    # inspect DB
+pnpm cf:dev       # Wrangler Pages local runtime
+pnpm cf:deploy    # Cloudflare Pages deploy
+pnpm db:push      # interactive Drizzle push
+pnpm db:push:local # non-interactive disposable local DB push
+pnpm db:generate  # generate migration SQL
+pnpm db:migrate   # apply migrations
 pnpm auth:schema  # regenerate Better Auth Drizzle schema
 ```
 
 ## App routes
 
 - `/` landing page
-- `/login` email/password sign-in/sign-up
+- `/login` email/password sign-in/sign-up + password reset request
+- `/reset-password` password reset callback page
+- `/onboarding` first-run workspace setup
+- `/invite/[token]` team invite acceptance
 - `/dashboard` protected app shell with workspace stats
-- `/dashboard/projects` project and task CRUD
-- `/dashboard/settings` profile update form
-- `/dashboard/billing` Stripe Checkout, Customer Portal, webhook-backed subscription state, and plan catalog
+- `/dashboard/projects` project and task CRUD with plan limits
+- `/dashboard/team` workspace settings, members, invites, role-based actions
+- `/dashboard/settings` profile, password, session, danger-zone account controls
+- `/dashboard/billing` Stripe Checkout, Customer Portal, webhooks, plan catalog
 - `/pricing` public pricing placeholder
-- `/docs` product docs and deployment-provider checklist
+- `/docs` product docs and Cloudflare deployment checklist
 
 ## Core app features
 
 - First dashboard visit creates a personal workspace for the signed-in user.
+- Onboarding names the workspace and can create the first project.
+- Team workspaces support member list, invites, and owner/admin/member roles.
+- Permission helpers centralize `requireUser`, workspace membership, role checks, and billing/invite capabilities.
 - Projects support create, edit, status update, and delete.
 - Tasks can be added to projects, toggled complete, and deleted.
-- Settings can update the signed-in user's display name.
+- Settings can update profile, change password, revoke sessions, and delete account.
 - Billing includes Stripe Checkout, Customer Portal, webhook sync, `free`/`pro`/`team` plans, and plan limits.
-- Docs include deployment checklists for Vercel, Cloudflare Pages, and Fly.io.
+- Docs include Cloudflare Pages/Workers and migration workflows.
+
+## Cloudflare deployment
+
+This template is configured for Cloudflare by default.
+
+Cloudflare Pages build settings:
+
+```text
+Framework preset: SvelteKit
+Build command: pnpm build
+Build output directory: .svelte-kit/cloudflare
+Compatibility flag: nodejs_als
+```
+
+Local Cloudflare runtime check:
+
+```bash
+pnpm build
+pnpm cf:dev
+```
+
+Deploy:
+
+```bash
+pnpm cf:deploy
+```
+
+## Environment variables
+
+| Variable                       | Required   | Notes                                             |
+| ------------------------------ | ---------- | ------------------------------------------------- |
+| `ORIGIN`                       | yes        | Public app origin, e.g. `https://app.example.com` |
+| `DATABASE_URL`                 | yes        | `file:local.db` locally, `libsql://...` for Turso |
+| `DATABASE_AUTH_TOKEN`          | production | Empty is OK for local `file:` DB                  |
+| `BETTER_AUTH_SECRET`           | yes        | Generate with `openssl rand -base64 32`           |
+| `EMAIL_PROVIDER`               | no         | Defaults to console placeholder                   |
+| `EMAIL_FROM`                   | production | Sender used by your email implementation          |
+| `STRIPE_SECRET_KEY`            | billing    | Required for checkout/portal                      |
+| `STRIPE_WEBHOOK_SECRET`        | billing    | Required for webhook verification                 |
+| `STRIPE_PRO_PRICE_LOOKUP_KEY`  | billing    | Defaults to `starter_pro_monthly`                 |
+| `STRIPE_TEAM_PRICE_LOOKUP_KEY` | billing    | Defaults to `starter_team_monthly`                |
+
+## Transactional email
+
+`src/lib/server/app/email.ts` intentionally logs email to console by default so the template runs immediately. Replace `sendTransactionalEmail` with Resend, Postmark, SendGrid, or a Cloudflare Email Workers integration before production.
 
 ## Stripe billing setup
 
@@ -88,19 +147,26 @@ stripe listen --forward-to localhost:5173/stripe/webhook
 
 The app treats webhooks as the source of truth. Checkout success pages do not directly grant paid access; subscription state is synced from Stripe events into the local database.
 
+## Database workflow
+
+- Local disposable DB: `pnpm db:push:local`
+- Production schema changes: `pnpm db:generate`, review SQL, then `pnpm db:migrate`
+- Create a fresh Turso DB for public demos.
+- Do not use `db:push --force` against production.
+
 ## Template philosophy
 
 Keep the core strong but replaceable:
 
-1. Auth, DB, dashboard, billing routes are present from day one.
-2. Product-specific logic should live under `src/lib/server` and `src/lib`.
+1. Auth, DB, dashboard, teams, billing routes are present from day one.
+2. Product-specific logic should live under `src/lib/server/app` and `src/lib`.
 3. Server secrets stay in `$lib/server` or server routes.
-4. Every new feature should add focused tests before it grows.
+4. Cloudflare is the default deployment target, but adapters remain replaceable.
+5. Every new feature should add focused tests before it grows.
 
 ## Before publishing as OSS
 
 - Replace placeholder copy and branding.
-- Choose and document a license.
 - Add real screenshots.
-- Run `pnpm validate`.
+- Run `pnpm validate` and `pnpm test:e2e`.
 - Create a fresh Turso DB for any public demo.

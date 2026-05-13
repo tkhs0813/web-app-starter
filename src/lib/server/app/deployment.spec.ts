@@ -4,10 +4,13 @@ import { deploymentProviders } from './deployment';
 describe('deployment providers', () => {
 	it('documents stable deployment options for the starter', () => {
 		expect(deploymentProviders.map((provider) => provider.id)).toEqual([
-			'vercel',
 			'cloudflare-pages',
-			'fly-io'
+			'cloudflare-workers',
+			'vercel'
 		]);
-		expect(deploymentProviders.every((provider) => provider.env.length > 0)).toBe(true);
+		expect(deploymentProviders[0]?.adapter).toBe('@sveltejs/adapter-cloudflare');
+		expect(
+			deploymentProviders.every((provider) => provider.env.includes('BETTER_AUTH_SECRET'))
+		).toBe(true);
 	});
 });

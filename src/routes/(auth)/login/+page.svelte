@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import type { ActionData } from './$types';
+	import { resolve } from '$app/paths';
+	import type { ActionData, PageData } from './$types';
 
-	let { form }: { form: ActionData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 </script>
 
 <svelte:head>
@@ -16,22 +17,27 @@
 			Sign in and start building.
 		</h1>
 		<p class="mt-5 text-lg leading-8 text-slate-300">
-			Email/password 認証を用意済み。あとで OAuth, magic link, team auth も足しやすい構成。
+			Email/password, email verification, password reset, and abuse throttling are wired for a
+			Cloudflare-first SaaS starter.
 		</p>
+		<a class="mt-8 text-sm font-semibold text-cyan-200 hover:text-cyan-100" href={resolve('/')}
+			>← Back to home</a
+		>
 	</section>
 
 	<section
-		class="rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-cyan-950/30"
+		class="space-y-4 rounded-3xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl shadow-cyan-950/30"
 	>
-		<form class="space-y-5" method="post" action="?/signInEmail" use:enhance>
-			{#if form?.message}
-				<p
-					class="rounded-2xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-100"
-				>
-					{form.message}
-				</p>
-			{/if}
+		{#if form?.message}
+			<p
+				class="rounded-2xl border border-cyan-300/30 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100"
+			>
+				{form.message}
+			</p>
+		{/if}
 
+		<form class="space-y-5" method="post" action="?/signInEmail" use:enhance>
+			<input type="hidden" name="redirectTo" value={data.redirectTo} />
 			<label class="block text-sm font-medium text-slate-200">
 				Email
 				<input
@@ -75,6 +81,28 @@
 					>Create account</button
 				>
 			</div>
+		</form>
+
+		<form
+			method="post"
+			action="?/requestPasswordReset"
+			use:enhance
+			class="rounded-2xl border border-white/10 bg-slate-950/40 p-4"
+		>
+			<label class="block text-sm font-medium text-slate-200">
+				Forgot password?
+				<input
+					class="mt-2 w-full rounded-2xl border-white/10 bg-slate-900 text-white"
+					type="email"
+					name="email"
+					autocomplete="email"
+					placeholder="you@example.com"
+					required
+				/>
+			</label>
+			<button class="mt-3 text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+				>Send reset link</button
+			>
 		</form>
 	</section>
 </main>
