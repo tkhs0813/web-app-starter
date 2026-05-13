@@ -20,7 +20,8 @@ declare global {
 		interface Platform {
 			env?: {
 				EMAIL?: SendEmail;
-				[key: string]: string | SendEmail | undefined;
+				RATE_LIMIT?: KVNamespace;
+				[key: string]: string | SendEmail | KVNamespace | undefined;
 			};
 			context?: ExecutionContext;
 			cf?: IncomingRequestCfProperties;

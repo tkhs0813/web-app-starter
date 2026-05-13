@@ -90,8 +90,55 @@ export function canCreateProject(input: { plan: string | null | undefined; proje
 	return limit === 'unlimited' || input.projectCount < limit;
 }
 
+export function canCreateWorkspace(input: {
+	plan: string | null | undefined;
+	workspaceCount: number;
+}) {
+	const limit = getPlanLimits(input.plan).workspaces;
+	return limit === 'unlimited' || input.workspaceCount < limit;
+}
+
+export function canInviteTeamMember(input: {
+	plan: string | null | undefined;
+	memberCount: number;
+}) {
+	const limit = getPlanLimits(input.plan).teamMembers;
+	return limit === 'unlimited' || input.memberCount < limit;
+}
+
+export function getPlanEntitlements(plan: string | null | undefined) {
+	const limits = getPlanLimits(plan);
+	return [
+		limits.workspaces === 'unlimited' ? 'Unlimited workspaces' : `${limits.workspaces} workspace`,
+		limits.projects === 'unlimited' ? 'Unlimited projects' : `${limits.projects} projects`,
+		limits.teamMembers === 'unlimited'
+			? 'Unlimited team members'
+			: `${limits.teamMembers} team member${limits.teamMembers === 1 ? '' : 's'}`
+	];
+}
+
+export function getBillingStatusTone(status: string | null | undefined) {
+	if (status === 'active' || status === 'trialing') return 'success';
+	if (status === 'past_due' || status === 'unpaid' || status === 'incomplete') return 'warning';
+	if (status === 'canceled' || status === 'incomplete_expired' || status === 'paused')
+		return 'danger';
+	return 'neutral';
+}
+
 export function projectLimitMessage(plan: string | null | undefined) {
 	const limit = getPlanLimits(plan).projects;
 	if (limit === 'unlimited') return null;
 	return `Free plan is limited to ${limit} projects. Upgrade to Pro to create more.`;
+}
+
+export function workspaceLimitMessage(plan: string | null | undefined) {
+	const limit = getPlanLimits(plan).workspaces;
+	if (limit === 'unlimited') return null;
+	return `${getBillingPlan(plan).name} plan is limited to ${limit} workspace. Upgrade to Team to create more.`;
+}
+
+export function teamMemberLimitMessage(plan: string | null | undefined) {
+	const limit = getPlanLimits(plan).teamMembers;
+	if (limit === 'unlimited') return null;
+	return `${getBillingPlan(plan).name} plan is limited to ${limit} team member. Upgrade to Team to invite more people.`;
 }

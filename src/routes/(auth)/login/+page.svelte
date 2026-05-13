@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
+	import { env as publicEnv } from '$env/dynamic/public';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -8,6 +9,9 @@
 
 <svelte:head>
 	<title>Login — web-app-starter</title>
+	{#if publicEnv.PUBLIC_TURNSTILE_SITE_KEY}
+		<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+	{/if}
 </svelte:head>
 
 <main class="mx-auto grid max-w-6xl gap-10 px-6 py-16 lg:grid-cols-[0.9fr_1.1fr]">
@@ -70,6 +74,10 @@
 				/>
 			</label>
 
+			{#if publicEnv.PUBLIC_TURNSTILE_SITE_KEY}
+				<div class="cf-turnstile" data-sitekey={publicEnv.PUBLIC_TURNSTILE_SITE_KEY}></div>
+			{/if}
+
 			<div class="grid gap-3 sm:grid-cols-2">
 				<button
 					class="rounded-2xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 hover:bg-cyan-300"
@@ -100,6 +108,9 @@
 					required
 				/>
 			</label>
+			{#if publicEnv.PUBLIC_TURNSTILE_SITE_KEY}
+				<div class="cf-turnstile mt-3" data-sitekey={publicEnv.PUBLIC_TURNSTILE_SITE_KEY}></div>
+			{/if}
 			<button class="mt-3 text-sm font-semibold text-cyan-200 hover:text-cyan-100"
 				>Send reset link</button
 			>

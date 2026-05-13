@@ -8,8 +8,9 @@ Ryo's Cloudflare-first SvelteKit starter for OSS-friendly products and small Saa
 - Cloudflare Pages/Workers via `@sveltejs/adapter-cloudflare`
 - Turso/libSQL + Drizzle ORM
 - Better Auth: email/password, email verification, password reset, sessions
-- Workspace onboarding, team invites, role helpers
-- Stripe Checkout, Customer Portal, webhook-backed subscription state
+- Cloudflare KV-backed auth throttling + optional Turnstile bot checks
+- Workspace onboarding, switcher, team invites, invite resend/revoke, role helpers
+- Stripe Checkout, Customer Portal, webhook-backed subscription state, plan limit enforcement
 - Tailwind CSS v4 + forms + typography
 - Vitest, Playwright, Storybook
 - ESLint, Prettier, GitHub Actions
@@ -17,10 +18,7 @@ Ryo's Cloudflare-first SvelteKit starter for OSS-friendly products and small Saa
 ## Quick start
 
 ```bash
-pnpm install
-cp .env.example .env
-pnpm auth:schema
-pnpm db:push:local
+pnpm setup
 pnpm dev
 ```
 
@@ -42,6 +40,7 @@ pnpm test:unit    # Vitest server/unit tests
 pnpm test:e2e     # Playwright
 pnpm build        # production Cloudflare build
 pnpm validate     # check + lint + unit tests + build
+pnpm smoke:prod   # smoke-test a deployed URL via SMOKE_TEST_URL
 pnpm cf:dev       # Wrangler Pages local runtime
 pnpm cf:deploy    # Cloudflare Pages deploy
 pnpm db:push      # interactive Drizzle push
@@ -114,6 +113,8 @@ pnpm cf:deploy
 | `BETTER_AUTH_SECRET`           | yes        | Generate with `openssl rand -base64 32`           |
 | `EMAIL_PROVIDER`               | no         | `console` locally, `cloudflare` in production     |
 | `EMAIL_FROM`                   | production | Verified sender for Cloudflare Email Service      |
+| `PUBLIC_TURNSTILE_SITE_KEY`    | production | Optional Cloudflare Turnstile widget site key     |
+| `TURNSTILE_SECRET_KEY`         | production | Optional Cloudflare Turnstile server secret       |
 | `STRIPE_SECRET_KEY`            | billing    | Required for checkout/portal                      |
 | `STRIPE_WEBHOOK_SECRET`        | billing    | Required for webhook verification                 |
 | `STRIPE_PRO_PRICE_LOOKUP_KEY`  | billing    | Defaults to `starter_pro_monthly`                 |
@@ -147,6 +148,24 @@ Configure the sender in `wrangler.jsonc` and replace the placeholder with a veri
   }
 ]
 ```
+
+## Production hardening
+
+- Auth actions are throttled with `RATE_LIMIT` in production and in-memory buckets locally.
+- Login, signup, and password reset forms render Cloudflare Turnstile when `PUBLIC_TURNSTILE_SITE_KEY` is set.
+- Password signup requires practical strength before calling Better Auth.
+- Dashboard layout shows email verification and billing status banners.
+- See `docs/production-checklist.md` for Cloudflare bindings, secrets, and smoke-test steps.
+- See `docs/architecture.md` for the runtime boundary diagram.
+
+Create and wire the KV namespace before production deploy:
+
+```bash
+wrangler kv namespace create RATE_LIMIT
+wrangler kv namespace create RATE_LIMIT --preview
+```
+
+Then replace the placeholder IDs in `wrangler.jsonc`.
 
 ## Stripe billing setup
 

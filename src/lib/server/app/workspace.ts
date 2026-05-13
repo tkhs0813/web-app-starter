@@ -10,9 +10,11 @@ import {
 } from '$lib/server/db/schema';
 export type ProjectStatus = 'backlog' | 'active' | 'archived';
 export type InviteRole = 'admin' | 'member';
+export type WorkspaceRole = 'owner' | 'admin' | 'member';
 
 const projectStatuses = ['backlog', 'active', 'archived'] as const;
 const inviteRoles = ['admin', 'member'] as const;
+const editableMemberRoles = ['admin', 'member'] as const;
 
 export function makeWorkspaceSlug(
 	name: string | null | undefined,
@@ -39,6 +41,28 @@ export function normalizeInviteRole(
 	value: FormDataEntryValue | string | null | undefined
 ): InviteRole {
 	return inviteRoles.includes(value as InviteRole) ? (value as InviteRole) : 'member';
+}
+
+export function normalizeMemberRole(
+	value: FormDataEntryValue | string | null | undefined
+): Exclude<WorkspaceRole, 'owner'> {
+	return editableMemberRoles.includes(value as Exclude<WorkspaceRole, 'owner'>)
+		? (value as Exclude<WorkspaceRole, 'owner'>)
+		: 'member';
+}
+
+export function canRemoveWorkspaceRole(role: WorkspaceRole) {
+	return role !== 'owner';
+}
+
+export function canUpdateWorkspaceRole(input: {
+	actorRole: WorkspaceRole;
+	targetRole: WorkspaceRole;
+	nextRole: Exclude<WorkspaceRole, 'owner'>;
+}) {
+	return (
+		input.actorRole === 'owner' || (input.actorRole === 'admin' && input.targetRole !== 'owner')
+	);
 }
 
 async function uniqueWorkspaceSlug(base: string) {
@@ -97,6 +121,16 @@ export async function listUserWorkspaces(userId: string) {
 		.innerJoin(workspace, eq(workspaceMember.workspaceId, workspace.id))
 		.where(eq(workspaceMember.userId, userId))
 		.orderBy(desc(workspaceMember.createdAt));
+}
+
+export async function getUserWorkspaceById(userId: string, workspaceId: string) {
+	const [membership] = await db
+		.select({ workspace, membership: workspaceMember })
+		.from(workspaceMember)
+		.innerJoin(workspace, eq(workspaceMember.workspaceId, workspace.id))
+		.where(and(eq(workspaceMember.userId, userId), eq(workspace.id, workspaceId)))
+		.limit(1);
+	return membership;
 }
 
 export async function createTeamWorkspace(input: { ownerId: string; name: string }) {
@@ -216,6 +250,33 @@ export async function listPendingInvites(workspaceId: string) {
 		.orderBy(desc(workspaceInvite.createdAt));
 }
 
+export async function getPendingInvite(workspaceId: string, inviteId: string) {
+	const [invite] = await db
+		.select()
+		.from(workspaceInvite)
+		.where(
+			and(
+				eq(workspaceInvite.workspaceId, workspaceId),
+				eq(workspaceInvite.id, inviteId),
+				isNull(workspaceInvite.acceptedAt),
+				gt(workspaceInvite.expiresAt, new Date())
+			)
+		)
+		.limit(1);
+	return invite;
+}
+
+export async function revokeWorkspaceInvite(input: { workspaceId: string; inviteId: string }) {
+	await db
+		.delete(workspaceInvite)
+		.where(
+			and(
+				eq(workspaceInvite.workspaceId, input.workspaceId),
+				eq(workspaceInvite.id, input.inviteId)
+			)
+		);
+}
+
 export async function acceptWorkspaceInvite(input: {
 	token: string;
 	userId: string;
@@ -256,6 +317,19 @@ export async function removeWorkspaceMember(input: {
 	actorUserId: string;
 }) {
 	if (input.memberUserId === input.actorUserId) throw new Error('You cannot remove yourself');
+	const [member] = await db
+		.select({ role: workspaceMember.role })
+		.from(workspaceMember)
+		.where(
+			and(
+				eq(workspaceMember.workspaceId, input.workspaceId),
+				eq(workspaceMember.userId, input.memberUserId)
+			)
+		)
+		.limit(1);
+	if (!member) throw new Error('Member not found');
+	if (!canRemoveWorkspaceRole(member.role))
+		throw new Error('Transfer ownership before removing an owner');
 	await db
 		.delete(workspaceMember)
 		.where(
@@ -263,6 +337,54 @@ export async function removeWorkspaceMember(input: {
 				eq(workspaceMember.workspaceId, input.workspaceId),
 				eq(workspaceMember.userId, input.memberUserId),
 				ne(workspaceMember.role, 'owner')
+			)
+		);
+}
+
+export async function updateWorkspaceMemberRole(input: {
+	workspaceId: string;
+	memberUserId: string;
+	actorUserId: string;
+	nextRole: Exclude<WorkspaceRole, 'owner'>;
+}) {
+	if (input.memberUserId === input.actorUserId) throw new Error('You cannot change your own role');
+	const [actor] = await db
+		.select({ role: workspaceMember.role })
+		.from(workspaceMember)
+		.where(
+			and(
+				eq(workspaceMember.workspaceId, input.workspaceId),
+				eq(workspaceMember.userId, input.actorUserId)
+			)
+		)
+		.limit(1);
+	const [member] = await db
+		.select({ role: workspaceMember.role })
+		.from(workspaceMember)
+		.where(
+			and(
+				eq(workspaceMember.workspaceId, input.workspaceId),
+				eq(workspaceMember.userId, input.memberUserId)
+			)
+		)
+		.limit(1);
+	if (!actor || !member) throw new Error('Member not found');
+	if (
+		!canUpdateWorkspaceRole({
+			actorRole: actor.role,
+			targetRole: member.role,
+			nextRole: input.nextRole
+		})
+	) {
+		throw new Error('You cannot change that member role');
+	}
+	await db
+		.update(workspaceMember)
+		.set({ role: input.nextRole, updatedAt: new Date() })
+		.where(
+			and(
+				eq(workspaceMember.workspaceId, input.workspaceId),
+				eq(workspaceMember.userId, input.memberUserId)
 			)
 		);
 }

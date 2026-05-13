@@ -30,7 +30,9 @@
 		"cf:dev": "wrangler pages dev .svelte-kit/cloudflare",
 		"cf:deploy": "wrangler pages deploy .svelte-kit/cloudflare",
 		"cf:types": "wrangler types src/worker-configuration.d.ts",
-		"db:push:local": "drizzle-kit push --force"
+		"db:push:local": "drizzle-kit push --force",
+		"setup": "node scripts/setup.mjs",
+		"smoke:prod": "node scripts/smoke.mjs"
 	},
 	"devDependencies": {
 		"@better-auth/cli": "~1.4.21",

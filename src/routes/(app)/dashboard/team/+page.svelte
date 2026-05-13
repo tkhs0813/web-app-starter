@@ -65,7 +65,9 @@
 	<section class="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
 		<div class="flex items-center justify-between gap-4">
 			<h2 class="text-xl font-bold text-white">Members</h2>
-			<p class="text-sm text-slate-400">{data.members.length} member(s)</p>
+			<p class="text-sm text-slate-400">
+				{data.members.length} member(s) · {data.billing.plan.name}
+			</p>
 		</div>
 		<div class="mt-4 divide-y divide-white/10">
 			{#each data.members as member (member.userId)}
@@ -75,19 +77,36 @@
 						<p class="text-sm text-slate-400">{member.email}</p>
 					</div>
 					<div class="flex items-center gap-3">
-						<span class="rounded-full bg-slate-900 px-3 py-1 text-xs text-cyan-200"
-							>{member.role}</span
-						>
 						{#if data.canInvite && member.role !== 'owner'}
+							<form
+								method="post"
+								action="?/updateMemberRole"
+								use:enhance
+								class="flex items-center gap-2"
+							>
+								<input type="hidden" name="workspaceId" value={data.workspace.id} />
+								<input type="hidden" name="userId" value={member.userId} />
+								<select
+									name="role"
+									class="rounded-full border-white/10 bg-slate-900 px-3 py-1 text-xs text-cyan-200"
+								>
+									<option value="member" selected={member.role === 'member'}>member</option>
+									<option value="admin" selected={member.role === 'admin'}>admin</option>
+								</select>
+								<button class="text-sm font-semibold text-cyan-200 hover:text-cyan-100"
+									>Save role</button
+								>
+							</form>
 							<form method="post" action="?/removeMember" use:enhance>
-								<input type="hidden" name="workspaceId" value={data.workspace.id} /><input
-									type="hidden"
-									name="userId"
-									value={member.userId}
-								/>
+								<input type="hidden" name="workspaceId" value={data.workspace.id} />
+								<input type="hidden" name="userId" value={member.userId} />
 								<button class="text-sm font-semibold text-red-200 hover:text-red-100">Remove</button
 								>
 							</form>
+						{:else}
+							<span class="rounded-full bg-slate-900 px-3 py-1 text-xs text-cyan-200"
+								>{member.role}</span
+							>
 						{/if}
 					</div>
 				</div>
@@ -118,19 +137,41 @@
 					><option value="member">Member</option><option value="admin">Admin</option></select
 				>
 			</label>
-			<button class="self-end rounded-2xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950"
-				>Invite</button
+			<button
+				class="self-end rounded-2xl bg-cyan-400 px-4 py-3 font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+				disabled={!data.canAddMember}>Invite</button
 			>
 		</form>
+		{#if !data.canAddMember && data.teamLimitMessage}
+			<p class="rounded-2xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm text-amber-100">
+				{data.teamLimitMessage}
+			</p>
+		{/if}
 	{/if}
 
 	<section class="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
 		<h2 class="text-xl font-bold text-white">Pending invites</h2>
 		<div class="mt-4 space-y-3">
 			{#each data.invites as invite (invite.id)}
-				<p class="rounded-2xl bg-slate-900 px-4 py-3 text-sm text-slate-300">
-					{invite.email} · {invite.role} · expires {invite.expiresAt.toLocaleDateString()}
-				</p>
+				<div
+					class="flex flex-col gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm text-slate-300 md:flex-row md:items-center md:justify-between"
+				>
+					<p>{invite.email} · {invite.role} · expires {invite.expiresAt.toLocaleDateString()}</p>
+					{#if data.canInvite}
+						<div class="flex gap-3">
+							<form method="post" action="?/resendInvite" use:enhance>
+								<input type="hidden" name="workspaceId" value={data.workspace.id} />
+								<input type="hidden" name="inviteId" value={invite.id} />
+								<button class="font-semibold text-cyan-200 hover:text-cyan-100">Resend</button>
+							</form>
+							<form method="post" action="?/revokeInvite" use:enhance>
+								<input type="hidden" name="workspaceId" value={data.workspace.id} />
+								<input type="hidden" name="inviteId" value={invite.id} />
+								<button class="font-semibold text-red-200 hover:text-red-100">Revoke</button>
+							</form>
+						</div>
+					{/if}
+				</div>
 			{:else}
 				<p class="text-sm text-slate-400">No pending invites.</p>
 			{/each}

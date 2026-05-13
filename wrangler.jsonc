@@ -3,6 +3,13 @@
 	"compatibility_date": "2026-05-13",
 	"compatibility_flags": ["nodejs_als"],
 	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT",
+			"id": "replace-with-production-kv-namespace-id",
+			"preview_id": "replace-with-preview-kv-namespace-id"
+		}
+	],
 	"send_email": [
 		{
 			"name": "EMAIL",
