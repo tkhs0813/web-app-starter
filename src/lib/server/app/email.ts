@@ -1,3 +1,4 @@
+import { getRequestEvent } from '$app/server';
 import { env } from '$env/dynamic/private';
 
 type EmailMessage = {
@@ -7,18 +8,53 @@ type EmailMessage = {
 	html?: string;
 };
 
+const emailProviders = ['console', 'cloudflare'] as const;
+
+type EmailProvider = (typeof emailProviders)[number];
+
+function getEmailProvider(): EmailProvider {
+	const provider = env.EMAIL_PROVIDER ?? 'console';
+
+	if (emailProviders.includes(provider as EmailProvider)) {
+		return provider as EmailProvider;
+	}
+
+	throw new Error(
+		`Unsupported EMAIL_PROVIDER=${provider}. Use "console" for local development or "cloudflare" for production.`
+	);
+}
+
+function getEmailFrom() {
+	if (!env.EMAIL_FROM) {
+		throw new Error('EMAIL_FROM is required when EMAIL_PROVIDER=cloudflare.');
+	}
+
+	return env.EMAIL_FROM;
+}
+
 export async function sendTransactionalEmail(message: EmailMessage) {
-	// Cloudflare-ready placeholder: wire this to Resend/Postmark/SendGrid from one server-only module.
-	// Keeping the template dependency-free makes the starter safe to clone and run immediately.
-	if (!env.EMAIL_FROM || env.EMAIL_PROVIDER === 'console') {
+	const provider = getEmailProvider();
+
+	if (provider === 'console') {
 		console.info('[email:console]', JSON.stringify(message, null, 2));
 		return;
 	}
 
-	console.warn(
-		`EMAIL_PROVIDER=${env.EMAIL_PROVIDER ?? 'unset'} is not implemented yet. Falling back to console email.`
-	);
-	console.info('[email:fallback]', JSON.stringify(message, null, 2));
+	const emailBinding = getRequestEvent().platform?.env?.EMAIL;
+
+	if (!emailBinding) {
+		throw new Error(
+			'Cloudflare Email Service binding EMAIL is not configured. Add send_email to wrangler.jsonc and set EMAIL_PROVIDER=cloudflare only in Cloudflare runtime.'
+		);
+	}
+
+	await emailBinding.send({
+		to: message.to,
+		from: getEmailFrom(),
+		subject: message.subject,
+		text: message.text,
+		html: message.html
+	});
 }
 
 export async function sendVerificationEmail(input: {

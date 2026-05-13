@@ -2,5 +2,11 @@
 	"name": "web-app-starter",
 	"compatibility_date": "2026-05-13",
 	"compatibility_flags": ["nodejs_als"],
-	"pages_build_output_dir": ".svelte-kit/cloudflare"
+	"pages_build_output_dir": ".svelte-kit/cloudflare",
+	"send_email": [
+		{
+			"name": "EMAIL",
+			"allowed_sender_addresses": ["noreply@example.com"]
+		}
+	]
 }

@@ -13,7 +13,9 @@
 		</p>
 		<h2>Included flows</h2>
 		<ul>
-			<li>Email/password auth with verification and password reset hooks</li>
+			<li>
+				Email/password auth with Cloudflare Email Service verification and password reset hooks
+			</li>
 			<li>First-run onboarding and workspace setup</li>
 			<li>Team workspace members, invites, and role helpers</li>
 			<li>Project/task CRUD with plan limits</li>

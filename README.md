@@ -112,8 +112,8 @@ pnpm cf:deploy
 | `DATABASE_URL`                 | yes        | `file:local.db` locally, `libsql://...` for Turso |
 | `DATABASE_AUTH_TOKEN`          | production | Empty is OK for local `file:` DB                  |
 | `BETTER_AUTH_SECRET`           | yes        | Generate with `openssl rand -base64 32`           |
-| `EMAIL_PROVIDER`               | no         | Defaults to console placeholder                   |
-| `EMAIL_FROM`                   | production | Sender used by your email implementation          |
+| `EMAIL_PROVIDER`               | no         | `console` locally, `cloudflare` in production     |
+| `EMAIL_FROM`                   | production | Verified sender for Cloudflare Email Service      |
 | `STRIPE_SECRET_KEY`            | billing    | Required for checkout/portal                      |
 | `STRIPE_WEBHOOK_SECRET`        | billing    | Required for webhook verification                 |
 | `STRIPE_PRO_PRICE_LOOKUP_KEY`  | billing    | Defaults to `starter_pro_monthly`                 |
@@ -121,7 +121,32 @@ pnpm cf:deploy
 
 ## Transactional email
 
-`src/lib/server/app/email.ts` intentionally logs email to console by default so the template runs immediately. Replace `sendTransactionalEmail` with Resend, Postmark, SendGrid, or a Cloudflare Email Workers integration before production.
+`src/lib/server/app/email.ts` intentionally logs email to console by default so the template runs immediately. Production uses **Cloudflare Email Service** through the Workers `EMAIL` binding — no Resend/Postmark/SendGrid fallback is included.
+
+Local development:
+
+```bash
+EMAIL_PROVIDER="console"
+EMAIL_FROM="Web App Starter <noreply@example.com>"
+```
+
+Production:
+
+```bash
+EMAIL_PROVIDER="cloudflare"
+EMAIL_FROM="Web App Starter <noreply@yourdomain.com>"
+```
+
+Configure the sender in `wrangler.jsonc` and replace the placeholder with a verified Cloudflare Email Service sender:
+
+```jsonc
+"send_email": [
+  {
+    "name": "EMAIL",
+    "allowed_sender_addresses": ["noreply@yourdomain.com"]
+  }
+]
+```
 
 ## Stripe billing setup
 

@@ -18,7 +18,10 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		interface Platform {
-			env?: Record<string, string>;
+			env?: {
+				EMAIL?: SendEmail;
+				[key: string]: string | SendEmail | undefined;
+			};
 			context?: ExecutionContext;
 			cf?: IncomingRequestCfProperties;
 		}
